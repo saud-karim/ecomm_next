@@ -21,7 +21,7 @@ export default function PlansPage() {
     const [form, setForm] = useState<Record<string, unknown>>(EMPTY_PLAN);
     const [saving, setSaving] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
-    const { t, locale } = useI18n();
+    const { t, locale, isRtl } = useI18n();
 
     const fetchPlans = async () => {
         try {
@@ -90,7 +90,7 @@ export default function PlansPage() {
                     {plans.map(p => (
                         <div key={p.id} className="card" style={{ position: 'relative', border: p.is_featured ? '2px solid #FF6B00' : undefined }}>
                             {p.is_featured && (
-                                <div style={{ position: 'absolute', top: 14, right: 14 }}>
+                                <div style={{ position: 'absolute', top: 14, [isRtl ? 'left' : 'right']: 14 }}>
                                     <span className="badge-pill badge-orange"><Star size={10} /> Featured</span>
                                 </div>
                             )}

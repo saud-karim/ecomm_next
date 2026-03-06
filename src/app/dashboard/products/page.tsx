@@ -64,7 +64,7 @@ export default function ProductsPage() {
         try {
             await productsApi.destroy(id);
             setProducts(prev => prev.filter(p => p.id !== id));
-            toast.success(t('userDeleted'));
+            toast.success(t('productDeleted'));
         } catch { toast.error('Failed'); }
     };
 

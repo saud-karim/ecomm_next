@@ -112,6 +112,7 @@ export const translations = {
         noProductsFound: 'No products found',
         rejectProduct: 'Reject Product',
         reasonProductReject: 'Reason…',
+        productDeleted: 'Product deleted',
 
         // Orders page
         totalOrdersLabel: 'total orders',
@@ -272,6 +273,7 @@ export const translations = {
         noProductsFound: 'لا توجد منتجات',
         rejectProduct: 'رفض المنتج',
         reasonProductReject: 'السبب…',
+        productDeleted: 'تم حذف المنتج',
 
         // Orders page
         totalOrdersLabel: 'إجمالي الطلبات',
