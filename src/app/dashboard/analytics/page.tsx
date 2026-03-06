@@ -25,9 +25,10 @@ export default function AnalyticsPage() {
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchData(); }, []);
 
-    const dailyRevArr = Array.isArray(data?.daily_revenue) ? (data!.daily_revenue as any[]) : [];
+    const dailyRevArr = Array.isArray(data?.daily_revenue) ? (data!.daily_revenue as Record<string, string | number>[]) : [];
     const totalRev = dailyRevArr.reduce((sum, item) => sum + Number(item.revenue), 0);
     const totalOrd = dailyRevArr.reduce((sum, item) => sum + Number(item.orders), 0);
     const avgRev = dailyRevArr.length ? totalRev / dailyRevArr.length : 0;
@@ -38,12 +39,12 @@ export default function AnalyticsPage() {
         { label: t('avgDailyRevenue'), value: `$${avgRev.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: TrendingUp, color: '#22c55e', bg: '#f0fdf4' },
     ] : [];
 
-    const topSellersArr = Array.isArray(data?.top_sellers) ? (data!.top_sellers as any[]).map(s => ({
+    const topSellersArr = Array.isArray(data?.top_sellers) ? (data!.top_sellers as { store_name_ar?: string; store_name_en?: string; orders_sum_total?: number }[]).map(s => ({
         ...s,
         seller_name: isRtl ? s.store_name_ar : s.store_name_en
     })) : [];
 
-    const revenueByPlanArr = Array.isArray(data?.revenue_by_plan) ? (data!.revenue_by_plan as any[]).map(r => ({
+    const revenueByPlanArr = Array.isArray(data?.revenue_by_plan) ? (data!.revenue_by_plan as { plan?: { name_ar?: string; name_en?: string }; total_revenue?: number }[]).map(r => ({
         ...r,
         plan_name: isRtl ? r.plan?.name_ar : r.plan?.name_en
     })) : [];

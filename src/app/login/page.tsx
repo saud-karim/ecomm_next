@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('admin@safqa.com');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -17,13 +17,17 @@ export default function LoginPage() {
         try {
             const res = await authApi.login(email, password);
             const { token, user } = res.data.data;
-            if (user.role !== 'super_admin') {
-                toast.error('Access denied. Admin only.');
+            if (user.role !== 'super_admin' && user.role !== 'seller') {
+                toast.error('Access denied.');
                 return;
             }
             setAuth(token, user);
             toast.success('Welcome back!');
-            router.push('/dashboard');
+            if (user.role === 'seller') {
+                router.push('/seller-dashboard');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
             toast.error(msg);
@@ -43,7 +47,7 @@ export default function LoginPage() {
                         </div>
                         <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>Saf<em style={{ color: '#FF6B00', fontStyle: 'normal' }}>qa</em></span>
                     </div>
-                    <p style={{ color: '#6b7280', fontSize: '.875rem' }}>Super Admin Panel</p>
+                    <p style={{ color: '#6b7280', fontSize: '.875rem' }}>Safqa Admin &amp; Seller Portal</p>
                 </div>
 
                 {/* Card */}
@@ -72,7 +76,7 @@ export default function LoginPage() {
                     </form>
                 </div>
                 <p style={{ textAlign: 'center', marginTop: '20px', color: '#4b5563', fontSize: '.8rem' }}>
-                    Safqa © 2026 — Super Admin Access Only
+                    Safqa © 2026 — Admin &amp; Seller Access
                 </p>
             </div>
         </div>

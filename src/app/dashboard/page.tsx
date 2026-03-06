@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { analyticsApi } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
@@ -28,12 +28,20 @@ export default function DashboardPage() {
     const [error, setError] = useState('');
     const { t, isRtl } = useI18n();
 
-    useEffect(() => {
+    const fetchDash = useCallback(() => {
         analyticsApi.dashboard()
             .then(r => setData(r.data.data))
             .catch(() => setError(t('failedDashboard')))
             .finally(() => setLoading(false));
-    }, []);
+    }, [t]);
+
+    useEffect(() => {
+        fetchDash();
+        const interval = setInterval(fetchDash, 30000);
+        const onFocus = () => fetchDash();
+        window.addEventListener('focus', onFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', onFocus); };
+    }, [fetchDash]);
 
     if (loading) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>

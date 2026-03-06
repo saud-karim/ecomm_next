@@ -27,7 +27,7 @@ export default function ProductsPage() {
     const [selected, setSelected] = useState<Product | null>(null);
     const [rejectModal, setRejectModal] = useState<Product | null>(null);
     const [rejectReason, setRejectReason] = useState('');
-    const { t, locale } = useI18n();
+    const { t } = useI18n();
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
@@ -39,7 +39,13 @@ export default function ProductsPage() {
         finally { setLoading(false); }
     }, [search, status, page]);
 
-    useEffect(() => { fetchProducts(); }, [fetchProducts]);
+    useEffect(() => {
+        fetchProducts();
+        const interval = setInterval(fetchProducts, 30000);
+        const onFocus = () => fetchProducts();
+        window.addEventListener('focus', onFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', onFocus); };
+    }, [fetchProducts]);
 
     const approve = async (id: number) => {
         try {
@@ -108,8 +114,8 @@ export default function ProductsPage() {
                                     <td style={{ color: '#9ca3af', fontSize: '.8rem' }}>{p.id}</td>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            {p.primary_image ? (
-                                                <img src={p.primary_image.url} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover' }} />
+                                            {p.primary_image?.url ? (
+                                                <img src={p.primary_image.url.startsWith('http') ? p.primary_image.url : `http://127.0.0.1:8000${p.primary_image.url}`} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover' }} />
                                             ) : (
                                                 <div style={{ width: 38, height: 38, borderRadius: 8, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>📦</div>
                                             )}
@@ -158,7 +164,7 @@ export default function ProductsPage() {
                             <h3 className="modal-title">{pName(selected)}</h3>
                             <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem' }}>×</button>
                         </div>
-                        {selected.primary_image && <img src={selected.primary_image.url} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, marginBottom: 16 }} />}
+                        {selected.primary_image?.url && <img src={selected.primary_image.url.startsWith('http') ? selected.primary_image.url : `http://127.0.0.1:8000${selected.primary_image.url}`} alt="" style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 10, marginBottom: 16 }} />}
                         {([[t('product'), selected.name], ['SKU', selected.sku], [t('price'), `$${selected.price}`], [t('stock'), selected.quantity], [t('sellers'), selected.seller?.store_name || '—'], [t('category'), cName(selected)], [t('status'), selected.status]] as [string, string | number][]).map(([k, v]) => (
                             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                 <span style={{ color: '#6b7280', fontWeight: 500, fontSize: '.85rem' }}>{k}</span>

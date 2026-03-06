@@ -1,13 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Store, Package, ShoppingCart, CreditCard, Tag, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Tag, Ticket, User, BarChart3, LogOut, ChevronRight, ChevronLeft, CreditCard } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { clearAuth, getUser } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import toast from 'react-hot-toast';
 
-export default function Sidebar() {
+export default function SellerSidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const user = getUser();
@@ -15,16 +15,17 @@ export default function Sidebar() {
 
     const NAV = [
         { section: t('overview') },
-        { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+        { href: '/seller-dashboard', icon: LayoutDashboard, label: t('dashboard') },
+        { href: '/seller-dashboard/analytics', icon: BarChart3, label: t('analytics') },
         { section: t('manage') },
-        { href: '/dashboard/users', icon: Users, label: t('users') },
-        { href: '/dashboard/sellers', icon: Store, label: t('sellers') },
-        { href: '/dashboard/products', icon: Package, label: t('products') },
-        { href: '/dashboard/categories', icon: Tag, label: t('categories') || 'Categories' },
-        { href: '/dashboard/orders', icon: ShoppingCart, label: t('orders') },
+        { href: '/seller-dashboard/products', icon: Package, label: t('products') },
+        { href: '/seller-dashboard/orders', icon: ShoppingCart, label: t('orders') },
+        { href: '/seller-dashboard/offers', icon: Tag, label: t('sellerOffers') },
+        { href: '/seller-dashboard/coupons', icon: Ticket, label: t('sellerCoupons') },
         { section: t('billing') },
-        { href: '/dashboard/plans', icon: Tag, label: t('plans') },
-        { href: '/dashboard/subscriptions', icon: CreditCard, label: t('subscriptions') },
+        { href: '/seller-dashboard/subscription', icon: CreditCard, label: t('subscriptions') },
+        { section: t('account') },
+        { href: '/seller-dashboard/profile', icon: User, label: t('sellerProfile') },
     ];
 
     const handleLogout = async () => {
@@ -45,7 +46,7 @@ export default function Sidebar() {
                 </div>
                 <div>
                     <span>Saf<em>qa</em></span>
-                    <div className="badge">{t('admin')}</div>
+                    <div className="badge">{t('seller')}</div>
                 </div>
             </div>
 
@@ -71,11 +72,11 @@ export default function Sidebar() {
             <div style={{ borderTop: '1px solid #1e2130', padding: '16px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, marginBottom: 6 }}>
                     <div className="avatar" suppressHydrationWarning style={{ width: 34, height: 34, fontSize: '.8rem', flexShrink: 0 }}>
-                        {user?.name?.[0]?.toUpperCase() ?? 'A'}
+                        {user?.name?.[0]?.toUpperCase() ?? 'S'}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <div suppressHydrationWarning style={{ color: '#fff', fontSize: '.83rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name ?? 'Admin'}</div>
-                        <div style={{ color: '#6b7280', fontSize: '.72rem' }}>{t('superAdmin')}</div>
+                        <div suppressHydrationWarning style={{ color: '#fff', fontSize: '.83rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name ?? 'Seller'}</div>
+                        <div style={{ color: '#6b7280', fontSize: '.72rem' }}>{t('seller')}</div>
                     </div>
                 </div>
                 <button onClick={handleLogout} className="nav-item" style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer' }}>

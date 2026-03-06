@@ -66,6 +66,7 @@ export const sellersApi = {
 
 // ─── Admin – Products ────────────────────────────────
 export const productsApi = {
+  categories: () => api.get('/categories'),
   list: (params?: Record<string, unknown>) => api.get('/admin/products', { params }),
   show: (id: number) => api.get(`/admin/products/${id}`),
   approve: (id: number) => api.put(`/admin/products/${id}/approve`),
@@ -92,4 +93,83 @@ export const plansApi = {
 export const subscriptionsApi = {
   list: (params?: Record<string, unknown>) => api.get('/admin/subscriptions', { params }),
   show: (id: number) => api.get(`/admin/subscriptions/${id}`),
+};
+
+// ─── Admin – Categories ───────────────────────────────
+export const categoriesApi = {
+  list: () => api.get('/admin/categories'),
+  create: (data: FormData | Record<string, unknown>) =>
+    api.post('/admin/categories', data, {
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+    }),
+  update: (id: number, data: FormData | Record<string, unknown>) =>
+    api.post(`/admin/categories/${id}`, data, { // Use POST for FormData with _method=PUT
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+    }),
+  destroy: (id: number) => api.delete(`/admin/categories/${id}`),
+};
+
+// ─── Seller – Profile ────────────────────────────────
+export const sellerProfileApi = {
+  get: () => api.get('/seller/profile'),
+  update: (data: Record<string, unknown>) => api.put('/seller/profile', data),
+  changePassword: (data: Record<string, unknown>) => api.put('/seller/profile/password', data),
+};
+
+// ─── Seller – Subscription ───────────────────────────
+export const sellerSubscriptionApi = {
+  plans: () => api.get('/seller/subscription/plans'),
+  current: () => api.get('/seller/subscription/current'),
+  history: () => api.get('/seller/subscription/history'),
+  subscribe: (plan_id: number) => api.post('/seller/subscription/subscribe', { plan_id }),
+};
+
+// ─── Seller – Products ───────────────────────────────
+export const sellerProductsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/seller/products', { params }),
+  show: (id: number) => api.get(`/seller/products/${id}`),
+  create: (data: Record<string, unknown>) => api.post('/seller/products', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/seller/products/${id}`, data),
+  destroy: (id: number) => api.delete(`/seller/products/${id}`),
+  uploadImages: (id: number, formData: FormData) =>
+    api.post(`/seller/products/${id}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteImage: (productId: number, imageId: number) => api.delete(`/seller/products/${productId}/images/${imageId}`),
+};
+
+// ─── Seller – Orders ─────────────────────────────────
+export const sellerOrdersApi = {
+  list: (params?: Record<string, unknown>) => api.get('/seller/orders', { params }),
+  show: (id: number) => api.get(`/seller/orders/${id}`),
+  updateStatus: (id: number, status: string) => api.put(`/seller/orders/${id}/status`, { status }),
+};
+
+// ─── Seller – Offers ─────────────────────────────────
+export const sellerOffersApi = {
+  list: () => api.get('/seller/offers'),
+  create: (data: Record<string, unknown>) => api.post('/seller/offers', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/seller/offers/${id}`, data),
+  destroy: (id: number) => api.delete(`/seller/offers/${id}`),
+};
+
+// ─── Seller – Coupons ────────────────────────────────
+export const sellerCouponsApi = {
+  list: () => api.get('/seller/coupons'),
+  create: (data: Record<string, unknown>) => api.post('/seller/coupons', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/seller/coupons/${id}`, data),
+  destroy: (id: number) => api.delete(`/seller/coupons/${id}`),
+};
+
+// ─── Seller – Analytics ──────────────────────────────
+export const sellerAnalyticsApi = {
+  dashboard: () => api.get('/seller/analytics/dashboard'),
+  revenue: (params?: Record<string, string>) => api.get('/seller/analytics/revenue', { params }),
+};
+
+// ─── Notifications ─────────────────────────────────────
+export const notificationsApi = {
+  // `base` should be 'seller' or 'customer' depending on the user's role
+  list: (base: string) => api.get(`/${base}/notifications`),
+  markAsRead: (base: string, id: string) => api.post(`/${base}/notifications/${id}/read`),
+  markAllAsRead: (base: string) => api.post(`/${base}/notifications/read-all`),
+  destroy: (base: string, id: string) => api.delete(`/${base}/notifications/${id}`)
 };

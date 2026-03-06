@@ -23,7 +23,7 @@ export default function SellersPage() {
     const [selected, setSelected] = useState<Seller | null>(null);
     const [rejectModal, setRejectModal] = useState<Seller | null>(null);
     const [rejectReason, setRejectReason] = useState('');
-    const { t, locale } = useI18n();
+    const { t } = useI18n();
 
     const fetchSellers = useCallback(async () => {
         setLoading(true);

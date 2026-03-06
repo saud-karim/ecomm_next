@@ -104,7 +104,7 @@ export default function PlansPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14, marginBottom: 18 }}>
                                 <div style={{ fontSize: '.82rem', color: '#374151' }}>📦 {t('maxProducts2')}: <strong>{p.max_products}</strong></div>
                                 <div style={{ fontSize: '.82rem', color: '#374151' }}>🏷️ Max Offers: <strong>{p.max_offers}</strong></div>
-                                {(Array.isArray(p.features) ? p.features : (p.features as any)?.en || [])?.map((f: string, i: number) => <div key={i} style={{ fontSize: '.82rem', color: '#374151' }}>✓ {f}</div>)}
+                                {(Array.isArray(p.features) ? p.features : (p.features as { en?: string[] })?.en || [])?.map((f: string, i: number) => <div key={i} style={{ fontSize: '.82rem', color: '#374151' }}>✓ {f}</div>)}
                             </div>
                             <span className={`badge-pill ${p.is_active ? 'badge-green' : 'badge-red'}`}>{p.is_active ? t('active') : t('inactive')}</span>
                             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>

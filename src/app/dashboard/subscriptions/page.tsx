@@ -20,7 +20,7 @@ export default function SubscriptionsPage() {
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState('');
     const [page, setPage] = useState(1);
-    const { t, locale } = useI18n();
+    const { t } = useI18n();
 
     const fetchSubs = useCallback(async () => {
         setLoading(true);

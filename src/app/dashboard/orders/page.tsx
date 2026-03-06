@@ -14,14 +14,9 @@ interface Order {
 
 const STATUS_COLORS: Record<string, string> = {
     pending: 'badge-yellow', processing: 'badge-blue', shipped: 'badge-orange',
-    delivered: 'badge-green', cancelled: 'badge-red', returned: 'badge-gray',
+    delivered: 'badge-green', cancelled: 'badge-red', refunded: 'badge-gray',
 };
-const NEXT_STATUS: Record<string, string[]> = {
-    pending: ['processing', 'cancelled'],
-    processing: ['shipped', 'cancelled'],
-    shipped: ['delivered', 'returned'],
-    delivered: [], cancelled: [], returned: [],
-};
+const ALL_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -43,7 +38,13 @@ export default function OrdersPage() {
         finally { setLoading(false); }
     }, [search, status, page]);
 
-    useEffect(() => { fetchOrders(); }, [fetchOrders]);
+    useEffect(() => {
+        fetchOrders();
+        const interval = setInterval(fetchOrders, 30000);
+        const onFocus = () => fetchOrders();
+        window.addEventListener('focus', onFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', onFocus); };
+    }, [fetchOrders]);
 
     const updateStatus = async (id: number, newStatus: string) => {
         try {
@@ -70,7 +71,7 @@ export default function OrdersPage() {
                     <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}
                         className="form-input form-select" style={{ width: 160 }}>
                         <option value="">{t('allStatuses')}</option>
-                        {['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'].map(s => (
+                        {ALL_STATUSES.map(s => (
                             <option key={s} value={s} style={{ textTransform: 'capitalize' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                         ))}
                     </select>
@@ -99,14 +100,24 @@ export default function OrdersPage() {
                                     <td><span className={`badge-pill ${STATUS_COLORS[o.status] || 'badge-gray'}`}>{o.status}</span></td>
                                     <td style={{ color: '#6b7280', fontSize: '.8rem' }}>{new Date(o.created_at).toLocaleDateString()}</td>
                                     <td>
-                                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                                            <button className="btn btn-secondary btn-xs" onClick={() => setSelected(o)}><Eye size={12} /></button>
-                                            {(NEXT_STATUS[o.status] || []).map(ns => (
-                                                <button key={ns} className="btn btn-xs"
-                                                    style={{ background: ns === 'cancelled' || ns === 'returned' ? '#fee2e2' : '#dcfce7', color: ns === 'cancelled' || ns === 'returned' ? '#dc2626' : '#15803d', border: 'none', textTransform: 'capitalize' }}
-                                                    onClick={() => updateStatus(o.id, ns)}>{ns}
-                                                </button>
-                                            ))}
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <button className="btn btn-secondary btn-xs" onClick={() => setSelected(o)} title="View details"><Eye size={12} /></button>
+                                            <select
+                                                value={o.status}
+                                                onChange={e => updateStatus(o.id, e.target.value)}
+                                                style={{
+                                                    fontSize: '.75rem', fontWeight: 600, padding: '3px 6px',
+                                                    border: '1.5px solid #e5e7eb', borderRadius: 6,
+                                                    background: '#f9fafb', color: '#374151', cursor: 'pointer',
+                                                    outline: 'none', maxWidth: 120,
+                                                }}
+                                            >
+                                                {ALL_STATUSES.map(s => (
+                                                    <option key={s} value={s} style={{ textTransform: 'capitalize' }}>
+                                                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </td>
                                 </tr>
@@ -141,19 +152,32 @@ export default function OrdersPage() {
                                 <span style={{ fontWeight: 600, fontSize: '.85rem' }}>{String(v || '—')}</span>
                             </div>
                         ))}
-                        {(NEXT_STATUS[selected.status] || []).length > 0 && (
-                            <div style={{ marginTop: 20 }}>
-                                <p style={{ fontWeight: 700, marginBottom: 12, fontSize: '.875rem' }}>{t('updateStatus')}</p>
-                                <div style={{ display: 'flex', gap: 10 }}>
-                                    {(NEXT_STATUS[selected.status] || []).map(ns => (
-                                        <button key={ns} className="btn btn-primary btn-sm"
-                                            style={{ background: ns === 'cancelled' || ns === 'returned' ? '#ef4444' : '#FF6B00', textTransform: 'capitalize' }}
-                                            onClick={() => updateStatus(selected.id, ns)}>→ {ns}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div style={{ marginTop: 20, padding: '16px', background: '#f9fafb', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontWeight: 700, fontSize: '.875rem', color: '#374151', whiteSpace: 'nowrap' }}>{t('updateStatus')}:</span>
+                            <select
+                                defaultValue={selected.status}
+                                id="modal-status-select"
+                                style={{
+                                    flex: 1, fontSize: '.85rem', fontWeight: 600, padding: '7px 10px',
+                                    border: '1.5px solid #e5e7eb', borderRadius: 8,
+                                    background: '#fff', color: '#374151', cursor: 'pointer', outline: 'none',
+                                }}
+                            >
+                                {ALL_STATUSES.map(s => (
+                                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                                ))}
+                            </select>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => {
+                                    const sel = (document.getElementById('modal-status-select') as HTMLSelectElement)?.value;
+                                    if (sel && sel !== selected.status) updateStatus(selected.id, sel);
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
