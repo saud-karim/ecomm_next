@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { plansApi } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { Plus, Pencil, Trash2, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,7 @@ export default function PlansPage() {
     const [form, setForm] = useState<Record<string, unknown>>(EMPTY_PLAN);
     const [saving, setSaving] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
+    const { t, locale } = useI18n();
 
     const fetchPlans = async () => {
         try {
@@ -75,10 +77,10 @@ export default function PlansPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>Subscription Plans</h2>
-                    <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{plans.length} plans configured</p>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{t('titlePlans')}</h2>
+                    <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{plans.length} {t('plansSubtitle')}</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreate}><Plus size={15} /> New Plan</button>
+                <button className="btn btn-primary" onClick={openCreate}><Plus size={15} /> {t('addPlan')}</button>
             </div>
 
             {loading ? (
@@ -93,20 +95,20 @@ export default function PlansPage() {
                                 </div>
                             )}
                             <div style={{ marginBottom: 14 }}>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{p.name_en}</div>
-                                <div style={{ color: '#9ca3af', fontSize: '.8rem' }}>{p.name_ar}</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{locale === 'ar' ? (p.name_ar || p.name_en) : p.name_en}</div>
+                                <div style={{ color: '#9ca3af', fontSize: '.8rem' }}>{locale === 'ar' ? p.name_en : p.name_ar}</div>
                             </div>
                             <div style={{ fontSize: '2rem', fontWeight: 800, color: '#FF6B00', marginBottom: 4 }}>
-                                ${p.price}<span style={{ fontSize: '.85rem', color: '#9ca3af', fontWeight: 500 }}>/{p.billing_cycle}</span>
+                                ${p.price}<span style={{ fontSize: '.85rem', color: '#9ca3af', fontWeight: 500 }}>/{p.billing_cycle === 'monthly' ? t('monthly') : t('yearly')}</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14, marginBottom: 18 }}>
-                                <div style={{ fontSize: '.82rem', color: '#374151' }}>📦 Up to <strong>{p.max_products}</strong> products</div>
-                                <div style={{ fontSize: '.82rem', color: '#374151' }}>🏷️ Up to <strong>{p.max_offers}</strong> offers</div>
+                                <div style={{ fontSize: '.82rem', color: '#374151' }}>📦 {t('maxProducts2')}: <strong>{p.max_products}</strong></div>
+                                <div style={{ fontSize: '.82rem', color: '#374151' }}>🏷️ Max Offers: <strong>{p.max_offers}</strong></div>
                                 {(Array.isArray(p.features) ? p.features : (p.features as any)?.en || [])?.map((f: string, i: number) => <div key={i} style={{ fontSize: '.82rem', color: '#374151' }}>✓ {f}</div>)}
                             </div>
-                            <span className={`badge-pill ${p.is_active ? 'badge-green' : 'badge-red'}`}>{p.is_active ? 'Active' : 'Inactive'}</span>
+                            <span className={`badge-pill ${p.is_active ? 'badge-green' : 'badge-red'}`}>{p.is_active ? t('active') : t('inactive')}</span>
                             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openEdit(p)}><Pencil size={13} /> Edit</button>
+                                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openEdit(p)}><Pencil size={13} /> {t('editPlan')}</button>
                                 <button className="btn btn-danger btn-sm" onClick={() => destroy(p.id)}><Trash2 size={13} /></button>
                             </div>
                         </div>
@@ -119,22 +121,22 @@ export default function PlansPage() {
                 <div className="modal-backdrop" onClick={() => setModal(null)}>
                     <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3 className="modal-title">{modal === 'create' ? 'New Plan' : 'Edit Plan'}</h3>
+                            <h3 className="modal-title">{modal === 'create' ? t('createPlan') : t('editPlan')}</h3>
                             <button onClick={() => setModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem' }}>×</button>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                            {field('name_en', 'Name (English)')}
-                            {field('name_ar', 'Name (Arabic)')}
-                            {field('price', 'Price ($)', 'number')}
+                            {field('name_en', t('planNameEn'))}
+                            {field('name_ar', t('planNameAr'))}
+                            {field('price', t('price'), 'number')}
                             <div className="form-group">
-                                <label className="form-label">Billing Cycle</label>
+                                <label className="form-label">{t('billCycle')}</label>
                                 <select value={String(form.billing_cycle)} onChange={e => setForm(f => ({ ...f, billing_cycle: e.target.value }))}
                                     className="form-input form-select">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="yearly">Yearly</option>
+                                    <option value="monthly">{t('monthly')}</option>
+                                    <option value="yearly">{t('yearly')}</option>
                                 </select>
                             </div>
-                            {field('max_products', 'Max Products', 'number')}
+                            {field('max_products', t('maxProducts3'), 'number')}
                             {field('max_offers', 'Max Offers', 'number')}
                             {field('sort_order', 'Sort Order', 'number')}
                         </div>
@@ -145,13 +147,13 @@ export default function PlansPage() {
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '.875rem' }}>
                                 <input type="checkbox" checked={Boolean(form.is_active)} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
-                                Active
+                                {t('active')}
                             </label>
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModal(null)}>Cancel</button>
+                            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModal(null)}>{t('cancel')}</button>
                             <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>
-                                {saving ? <span className="spinner" /> : (modal === 'create' ? 'Create Plan' : 'Save Changes')}
+                                {saving ? <span className="spinner" /> : t('save')}
                             </button>
                         </div>
                     </div>

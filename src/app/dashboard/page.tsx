@@ -1,23 +1,19 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { analyticsApi } from '@/lib/api';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+import { useI18n } from '@/lib/i18n';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { TrendingUp, Users, Store, Package, ShoppingCart, DollarSign, Star, AlertCircle } from 'lucide-react';
 
 interface DashboardData {
     kpis: {
-        total_revenue: number;
-        total_orders: number;
-        total_users: number;
-        total_sellers: number;
-        total_products: number;
-        pending_sellers: number;
-        pending_products: number;
-        active_subscriptions: number;
+        total_revenue: number; total_orders: number; total_users: number;
+        total_sellers: number; total_products: number; pending_sellers: number;
+        pending_products: number; active_subscriptions: number;
     };
     revenue_chart: { date: string; revenue: number }[];
     orders_by_status: { status: string; count: number }[];
-    top_sellers: { store_name: string; revenue: number; orders: number }[];
+    top_sellers: { store_name_en: string; store_name_ar: string; revenue: number; orders: number }[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -30,18 +26,19 @@ export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const { t, isRtl } = useI18n();
 
     useEffect(() => {
         analyticsApi.dashboard()
             .then(r => setData(r.data.data))
-            .catch(() => setError('Failed to load dashboard data.'))
+            .catch(() => setError(t('failedDashboard')))
             .finally(() => setLoading(false));
     }, []);
 
     if (loading) return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 16 }}>
             <span className="spinner spinner-dark" style={{ width: 36, height: 36 }} />
-            <p style={{ color: '#6b7280' }}>Loading dashboard…</p>
+            <p style={{ color: '#6b7280' }}>{t('loadingDashboard')}</p>
         </div>
     );
 
@@ -54,22 +51,22 @@ export default function DashboardPage() {
     const s = data!.kpis;
 
     const stats = [
-        { label: 'Total Revenue', value: `$${s.total_revenue?.toLocaleString() ?? 0}`, icon: DollarSign, color: '#FF6B00', bg: '#fff4ee', change: '+12.5%', up: true },
-        { label: 'Total Orders', value: s.total_orders?.toLocaleString() ?? 0, icon: ShoppingCart, color: '#3b82f6', bg: '#eff6ff', change: '+8.2%', up: true },
-        { label: 'Total Users', value: s.total_users?.toLocaleString() ?? 0, icon: Users, color: '#22c55e', bg: '#f0fdf4', change: '+5.4%', up: true },
-        { label: 'Active Sellers', value: s.total_sellers?.toLocaleString() ?? 0, icon: Store, color: '#8b5cf6', bg: '#f5f3ff', change: '+3.1%', up: true },
-        { label: 'Products', value: s.total_products?.toLocaleString() ?? 0, icon: Package, color: '#f59e0b', bg: '#fffbeb', change: '+15%', up: true },
-        { label: 'Active Subs', value: s.active_subscriptions?.toLocaleString() ?? 0, icon: Star, color: '#ec4899', bg: '#fdf2f8', change: '+2.9%', up: true },
-        { label: 'Pending Sellers', value: s.pending_sellers ?? 0, icon: Store, color: '#ef4444', bg: '#fee2e2', change: 'Needs review', up: false },
-        { label: 'Pending Products', value: s.pending_products ?? 0, icon: Package, color: '#f97316', bg: '#fff7ed', change: 'Needs review', up: false },
+        { label: t('totalRevenue'), value: `$${s.total_revenue?.toLocaleString() ?? 0}`, icon: DollarSign, color: '#FF6B00', bg: '#fff4ee', change: '+12.5%', up: true },
+        { label: t('totalOrders'), value: s.total_orders?.toLocaleString() ?? 0, icon: ShoppingCart, color: '#3b82f6', bg: '#eff6ff', change: '+8.2%', up: true },
+        { label: t('totalUsers'), value: s.total_users?.toLocaleString() ?? 0, icon: Users, color: '#22c55e', bg: '#f0fdf4', change: '+5.4%', up: true },
+        { label: t('activeSellers'), value: s.total_sellers?.toLocaleString() ?? 0, icon: Store, color: '#8b5cf6', bg: '#f5f3ff', change: '+3.1%', up: true },
+        { label: t('products2'), value: s.total_products?.toLocaleString() ?? 0, icon: Package, color: '#f59e0b', bg: '#fffbeb', change: '+15%', up: true },
+        { label: t('activeSubs'), value: s.active_subscriptions?.toLocaleString() ?? 0, icon: Star, color: '#ec4899', bg: '#fdf2f8', change: '+2.9%', up: true },
+        { label: t('pendingSellers'), value: s.pending_sellers ?? 0, icon: Store, color: '#ef4444', bg: '#fee2e2', change: t('needsReview'), up: false },
+        { label: t('pendingProducts'), value: s.pending_products ?? 0, icon: Package, color: '#f97316', bg: '#fff7ed', change: t('needsReview'), up: false },
     ];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Header */}
             <div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: 4 }}>Welcome back, Admin 👋</h2>
-                <p style={{ color: '#6b7280', fontSize: '.875rem' }}>Here's what's happening on Safqa today.</p>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: 4 }}>{t('welcomeBack')}</h2>
+                <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{t('platformOverview')}</p>
             </div>
 
             {/* KPI Grid */}
@@ -93,9 +90,9 @@ export default function DashboardPage() {
                 {/* Revenue Chart */}
                 <div className="card">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                        <h3 style={{ fontWeight: 700 }}>Revenue Overview</h3>
+                        <h3 style={{ fontWeight: 700 }}>{t('revenueOverview')}</h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#22c55e', fontSize: '.8rem', fontWeight: 600 }}>
-                            <TrendingUp size={14} /> +12.5% this month
+                            <TrendingUp size={14} /> +12.5% {t('thisMonth')}
                         </div>
                     </div>
                     <ResponsiveContainer width="100%" height={240}>
@@ -107,9 +104,9 @@ export default function DashboardPage() {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-                            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} width={50} tickFormatter={v => `$${v}`} />
-                            <Tooltip formatter={(v) => [`$${v}`, 'Revenue']} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
+                            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} reversed={isRtl} />
+                            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} width={50} tickFormatter={v => `$${v}`} orientation={isRtl ? 'right' : 'left'} />
+                            <Tooltip formatter={(v) => [`$${v}`, t('totalRevenue')]} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
                             <Area type="monotone" dataKey="revenue" stroke="#FF6B00" strokeWidth={2.5} fill="url(#revGrad)" />
                         </AreaChart>
                     </ResponsiveContainer>
@@ -117,8 +114,8 @@ export default function DashboardPage() {
 
                 {/* Orders by Status Pie */}
                 <div className="card">
-                    <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Orders by Status</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <h3 style={{ fontWeight: 700, marginBottom: 20 }}>{t('ordersByStatus')}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 20, direction: 'ltr' }}>
                         <ResponsiveContainer width={180} height={200}>
                             <PieChart>
                                 <Pie data={data?.orders_by_status || []} dataKey="count" nameKey="status" innerRadius={55} outerRadius={85} paddingAngle={3}>
@@ -145,13 +142,13 @@ export default function DashboardPage() {
             {/* Top Sellers Bar Chart */}
             {data?.top_sellers && data.top_sellers.length > 0 && (
                 <div className="card">
-                    <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Top Sellers by Revenue</h3>
+                    <h3 style={{ fontWeight: 700, marginBottom: 20 }}>{t('topSellersByRev')}</h3>
                     <ResponsiveContainer width="100%" height={240}>
-                        <BarChart data={data.top_sellers} layout="vertical">
+                        <BarChart data={data.top_sellers.map(s => ({ ...s, store_name: isRtl ? (s.store_name_ar || s.store_name_en) : s.store_name_en }))} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                             <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
-                            <YAxis type="category" dataKey="store_name" tick={{ fontSize: 12, fill: '#374151' }} tickLine={false} axisLine={false} width={120} />
-                            <Tooltip formatter={(v) => [`$${v}`, 'Revenue']} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
+                            <YAxis type="category" dataKey="store_name" tick={{ fontSize: 12, fill: '#374151' }} tickLine={false} axisLine={false} width={120} orientation={isRtl ? 'right' : 'left'} />
+                            <Tooltip formatter={(v) => [`$${v}`, t('totalRevenue')]} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
                             <Bar dataKey="revenue" fill="#FF6B00" radius={[0, 6, 6, 0]} />
                         </BarChart>
                     </ResponsiveContainer>

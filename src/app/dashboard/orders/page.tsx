@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { ordersApi } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import { Search, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Order {
-    id: number; total_amount: number; status: string; created_at: string;
+    id: number; total: number; status: string; created_at: string;
     customer?: { name: string; email: string };
-    seller?: { store_name_en: string };
+    seller?: { store_name: string };
     items_count?: number; coupon_discount?: number;
 }
 
@@ -19,9 +20,7 @@ const NEXT_STATUS: Record<string, string[]> = {
     pending: ['processing', 'cancelled'],
     processing: ['shipped', 'cancelled'],
     shipped: ['delivered', 'returned'],
-    delivered: [],
-    cancelled: [],
-    returned: [],
+    delivered: [], cancelled: [], returned: [],
 };
 
 export default function OrdersPage() {
@@ -32,6 +31,7 @@ export default function OrdersPage() {
     const [status, setStatus] = useState('');
     const [page, setPage] = useState(1);
     const [selected, setSelected] = useState<Order | null>(null);
+    const { t } = useI18n();
 
     const fetchOrders = useCallback(async () => {
         setLoading(true);
@@ -50,26 +50,26 @@ export default function OrdersPage() {
             await ordersApi.updateStatus(id, newStatus);
             setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
             if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: newStatus } : null);
-            toast.success(`Order marked as ${newStatus}`);
+            toast.success(`Order → ${newStatus}`);
         } catch { toast.error('Failed to update status'); }
     };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
-                <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>Orders</h2>
-                <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{meta.total.toLocaleString()} total orders</p>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{t('orders')}</h2>
+                <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{meta.total.toLocaleString()} {t('totalOrdersLabel')}</p>
             </div>
 
             <div className="card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
                         <Search size={15} color="#9ca3af" />
-                        <input placeholder="Search order ID or customer…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+                        <input placeholder={t('searchOrder')} value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
                     </div>
                     <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}
                         className="form-input form-select" style={{ width: 160 }}>
-                        <option value="">All Statuses</option>
+                        <option value="">{t('allStatuses')}</option>
                         {['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'].map(s => (
                             <option key={s} value={s} style={{ textTransform: 'capitalize' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                         ))}
@@ -83,7 +83,7 @@ export default function OrdersPage() {
                 ) : (
                     <table className="tbl">
                         <thead>
-                            <tr><th>Order</th><th>Customer</th><th>Seller</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+                            <tr><th>{t('order')}</th><th>{t('customer')}</th><th>{t('sellers')}</th><th>{t('items')}</th><th>{t('total')}</th><th>{t('status')}</th><th>{t('date')}</th><th>{t('actions')}</th></tr>
                         </thead>
                         <tbody>
                             {orders.map(o => (
@@ -93,16 +93,16 @@ export default function OrdersPage() {
                                         <div style={{ fontWeight: 500, fontSize: '.85rem' }}>{o.customer?.name || '—'}</div>
                                         <div style={{ color: '#9ca3af', fontSize: '.75rem' }}>{o.customer?.email}</div>
                                     </td>
-                                    <td style={{ fontSize: '.85rem' }}>{o.seller?.store_name_en || '—'}</td>
+                                    <td style={{ fontSize: '.85rem' }}>{o.seller?.store_name || '—'}</td>
                                     <td style={{ fontWeight: 600 }}>{o.items_count ?? '—'}</td>
-                                    <td style={{ fontWeight: 700 }}>${o.total_amount}</td>
+                                    <td style={{ fontWeight: 700 }}>${o.total}</td>
                                     <td><span className={`badge-pill ${STATUS_COLORS[o.status] || 'badge-gray'}`}>{o.status}</span></td>
                                     <td style={{ color: '#6b7280', fontSize: '.8rem' }}>{new Date(o.created_at).toLocaleDateString()}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                                             <button className="btn btn-secondary btn-xs" onClick={() => setSelected(o)}><Eye size={12} /></button>
                                             {(NEXT_STATUS[o.status] || []).map(ns => (
-                                                <button key={ns} className={`btn btn-xs`}
+                                                <button key={ns} className="btn btn-xs"
                                                     style={{ background: ns === 'cancelled' || ns === 'returned' ? '#fee2e2' : '#dcfce7', color: ns === 'cancelled' || ns === 'returned' ? '#dc2626' : '#15803d', border: 'none', textTransform: 'capitalize' }}
                                                     onClick={() => updateStatus(o.id, ns)}>{ns}
                                                 </button>
@@ -111,7 +111,7 @@ export default function OrdersPage() {
                                     </td>
                                 </tr>
                             ))}
-                            {!orders.length && <tr><td colSpan={8} style={{ textAlign: 'center', color: '#9ca3af', padding: 40 }}>No orders found</td></tr>}
+                            {!orders.length && <tr><td colSpan={8} style={{ textAlign: 'center', color: '#9ca3af', padding: 40 }}>{t('noOrdersFound')}</td></tr>}
                         </tbody>
                     </table>
                 )}
@@ -126,30 +126,29 @@ export default function OrdersPage() {
                 )}
             </div>
 
-            {/* Order Detail Modal */}
             {selected && (
                 <div className="modal-backdrop" onClick={() => setSelected(null)}>
                     <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3 className="modal-title">Order #{selected.id}</h3>
+                            <h3 className="modal-title">{t('order')} #{selected.id}</h3>
                             <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem' }}>×</button>
                         </div>
-                        {[['Customer', selected.customer?.name], ['Email', selected.customer?.email], ['Seller', selected.seller?.store_name_en],
-                        ['Total', `$${selected.total_amount}`], ['Discount', selected.coupon_discount ? `$${selected.coupon_discount}` : '—'],
-                        ['Status', selected.status], ['Date', new Date(selected.created_at).toLocaleString()]].map(([k, v]) => (
-                            <div key={String(k)} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
+                        {([[t('customer'), selected.customer?.name], [t('email'), selected.customer?.email], [t('sellers'), selected.seller?.store_name],
+                        [t('total'), `$${selected.total}`], [t('discount'), selected.coupon_discount ? `$${selected.coupon_discount}` : '—'],
+                        [t('status'), selected.status], [t('date'), new Date(selected.created_at).toLocaleString()]] as [string, string | undefined][]).map(([k, v]) => (
+                            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f3f4f6' }}>
                                 <span style={{ color: '#6b7280', fontWeight: 500, fontSize: '.85rem' }}>{k}</span>
                                 <span style={{ fontWeight: 600, fontSize: '.85rem' }}>{String(v || '—')}</span>
                             </div>
                         ))}
                         {(NEXT_STATUS[selected.status] || []).length > 0 && (
                             <div style={{ marginTop: 20 }}>
-                                <p style={{ fontWeight: 700, marginBottom: 12, fontSize: '.875rem' }}>Update Status:</p>
+                                <p style={{ fontWeight: 700, marginBottom: 12, fontSize: '.875rem' }}>{t('updateStatus')}</p>
                                 <div style={{ display: 'flex', gap: 10 }}>
                                     {(NEXT_STATUS[selected.status] || []).map(ns => (
-                                        <button key={ns} className="btn btn-primary btn-sm" style={{ background: ns === 'cancelled' || ns === 'returned' ? '#ef4444' : '#FF6B00', textTransform: 'capitalize' }}
-                                            onClick={() => updateStatus(selected.id, ns)}>
-                                            → {ns}
+                                        <button key={ns} className="btn btn-primary btn-sm"
+                                            style={{ background: ns === 'cancelled' || ns === 'returned' ? '#ef4444' : '#FF6B00', textTransform: 'capitalize' }}
+                                            onClick={() => updateStatus(selected.id, ns)}>→ {ns}
                                         </button>
                                     ))}
                                 </div>

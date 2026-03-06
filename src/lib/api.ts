@@ -9,8 +9,13 @@ export const api = axios.create({
 
 // Attach token on every request
 api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('safqa_token') : null;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('safqa_token');
+    const locale = localStorage.getItem('admin_locale') || 'en';
+
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    config.headers['Accept-Language'] = locale;
+  }
   return config;
 });
 

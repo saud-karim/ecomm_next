@@ -4,30 +4,33 @@ import { useRouter, usePathname } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
+import { I18nProvider, useI18n, TKey } from '@/lib/i18n';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+const TITLE_KEYS: Record<string, TKey> = {
+    '/dashboard': 'titleDashboard',
+    '/dashboard/users': 'titleUsers',
+    '/dashboard/sellers': 'titleSellers',
+    '/dashboard/products': 'titleProducts',
+    '/dashboard/orders': 'titleOrders',
+    '/dashboard/plans': 'titlePlans',
+    '/dashboard/subscriptions': 'titleSubscriptions',
+    '/dashboard/analytics': 'titleAnalytics',
+};
+
+function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
+    const { t, isRtl } = useI18n();
 
     useEffect(() => {
         if (!isAuthenticated()) router.replace('/login');
     }, [router]);
 
-    // Title map
-    const titles: Record<string, string> = {
-        '/dashboard': 'Dashboard',
-        '/dashboard/users': 'Users',
-        '/dashboard/sellers': 'Sellers',
-        '/dashboard/products': 'Products',
-        '/dashboard/orders': 'Orders',
-        '/dashboard/plans': 'Subscription Plans',
-        '/dashboard/subscriptions': 'Subscriptions',
-        '/dashboard/analytics': 'Analytics',
-    };
-    const title = titles[pathname] || 'Admin Panel';
+    const titleKey = TITLE_KEYS[pathname] || 'titleAdminPanel';
+    const title = t(titleKey);
 
     return (
-        <div>
+        <div dir={isRtl ? 'rtl' : 'ltr'} style={{ fontFamily: isRtl ? "'Cairo', 'Inter', sans-serif" : "'Inter', 'Cairo', sans-serif" }}>
             <Sidebar />
             <div className="main-layout">
                 <Topbar title={title} />
@@ -36,5 +39,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <I18nProvider>
+            <DashboardLayoutInner>{children}</DashboardLayoutInner>
+        </I18nProvider>
     );
 }

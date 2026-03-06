@@ -1,11 +1,14 @@
 'use client';
 import { Bell, Search } from 'lucide-react';
 import { getUser } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 interface TopbarProps { title: string; }
 
 export default function Topbar({ title }: TopbarProps) {
     const user = getUser();
+    const { locale, setLocale, t, isRtl } = useI18n();
+
     return (
         <header className="topbar">
             <span className="topbar-title">{title}</span>
@@ -13,13 +16,39 @@ export default function Topbar({ title }: TopbarProps) {
                 {/* Search */}
                 <div className="search-bar" style={{ width: 220 }}>
                     <Search size={15} color="#9ca3af" />
-                    <input placeholder="Quick search…" />
+                    <input placeholder={t('quickSearch')} />
                 </div>
+
+                {/* Language Toggle */}
+                <button
+                    onClick={() => setLocale(locale === 'en' ? 'ar' : 'en')}
+                    suppressHydrationWarning
+                    style={{
+                        background: 'none',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        padding: '4px 10px',
+                        fontSize: '.78rem',
+                        fontWeight: 700,
+                        color: '#FF6B00',
+                        letterSpacing: '0.04em',
+                        lineHeight: 1.6,
+                        transition: 'border-color 150ms',
+                        minWidth: 42,
+                        textAlign: 'center',
+                    }}
+                    title={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+                >
+                    {locale === 'en' ? 'عربي' : 'EN'}
+                </button>
+
                 {/* Bell */}
                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative', padding: 6 }}>
                     <Bell size={20} color="#6b7280" />
                     <span style={{ position: 'absolute', top: 4, right: 4, width: 8, height: 8, borderRadius: '50%', background: '#FF6B00', border: '2px solid #fff' }} />
                 </button>
+
                 {/* Avatar */}
                 <div className="avatar" suppressHydrationWarning style={{ width: 36, height: 36, fontSize: '.85rem', background: '#ffedd5', color: '#FF6B00', cursor: 'pointer' }}>
                     {user?.name?.[0]?.toUpperCase() ?? 'A'}

@@ -55,11 +55,11 @@ body {
 .sidebar {
   position: fixed;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   height: 100vh;
   width: 260px;
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
+  border-inline-end: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   z-index: 50;
@@ -137,7 +137,7 @@ body {
 
 /* Main */
 .main-layout {
-  margin-left: 260px;
+  margin-inline-start: 260px;
   min-height: 100vh;
 }
 
@@ -599,10 +599,14 @@ body {
 
 @media(max-width:768px) {
   .main-layout {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 
   .sidebar {
+    transform: translateX(100%);
+  }
+
+  [dir="ltr"] .sidebar {
     transform: translateX(-100%);
   }
 
