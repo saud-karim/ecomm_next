@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { Bell, Search, CheckCircle, Package } from 'lucide-react';
-import { getUser } from '@/lib/auth';
+import { Bell, Search, CheckCircle, Package, Users, User, KeyRound, LogOut } from 'lucide-react';
+import { getUser, clearAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
-import { notificationsApi } from '@/lib/api';
+import { notificationsApi, globalApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+
 
 interface TopbarProps { title: string; }
 
@@ -15,7 +16,20 @@ export default function Topbar({ title }: TopbarProps) {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Profile dropdown state
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
+
+    // Global Search states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any>(null);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     const menuRef = useRef<HTMLDivElement>(null);
+    const searchRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     const fetchNotifications = async (currentUser: any) => {
@@ -49,6 +63,12 @@ export default function Topbar({ title }: TopbarProps) {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false);
+            }
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setIsSearchOpen(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setIsProfileOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -88,14 +108,121 @@ export default function Topbar({ title }: TopbarProps) {
         } catch (e) { console.error(e); }
     };
 
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        if (!query.trim() || query.length < 2) {
+            setSearchResults(null);
+            setIsSearchOpen(false);
+            return;
+        }
+
+        setIsSearching(true);
+        setIsSearchOpen(true);
+
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(async () => {
+            if (!user) return;
+            const apiPrefix = user.role === 'super_admin' ? 'admin' : user.role;
+            try {
+                const res = await globalApi.search(apiPrefix, query);
+                setSearchResults(res.data.data);
+            } catch (e) {
+                console.error('Search failed', e);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500); // 500ms debounce
+    };
+
+    const navTo = (path: string) => {
+        setIsSearchOpen(false);
+        setSearchQuery('');
+        router.push(path);
+    };
+
     return (
         <header className="topbar">
             <span className="topbar-title">{title}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {/* Search */}
-                <div className="search-bar" style={{ width: 220 }}>
-                    <Search size={15} color="#9ca3af" />
-                    <input placeholder={t('quickSearch')} />
+                <div style={{ position: 'relative' }} ref={searchRef}>
+                    <div className="search-bar" style={{ width: 280 }}>
+                        <Search size={15} color="#9ca3af" />
+                        <input
+                            placeholder={t('quickSearch') || 'Search users, products, orders...'}
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            onFocus={() => searchQuery.length >= 2 && setIsSearchOpen(true)}
+                        />
+                        {isSearching && <span className="spinner spinner-dark" style={{ width: 14, height: 14, position: 'absolute', right: 12 }} />}
+                    </div>
+
+                    {/* Search Dropdown */}
+                    {isSearchOpen && searchResults && (
+                        <div className="card" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 0, padding: 0, zIndex: 60, boxShadow: '0 10px 25px rgba(0,0,0,0.15)', overflow: 'hidden', border: '1px solid #e5e7eb', borderRadius: 12 }}>
+                            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+
+                                {/* Users Results (Admin only) */}
+                                {searchResults.users && searchResults.users.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: '8px 12px', background: '#f9fafb', fontSize: '.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Users & Sellers</div>
+                                        {searchResults.users.map((u: any) => (
+                                            <div key={`u-${u.id}`} onClick={() => navTo(u.role === 'seller' ? '/dashboard/sellers' : '/dashboard/users')} style={{ padding: '10px 16px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }} className="hover-bg-gray">
+                                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 600 }}>{u.name[0]?.toUpperCase()}</div>
+                                                <div>
+                                                    <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#1f2937' }}>{u.name}</div>
+                                                    <div style={{ fontSize: '.75rem', color: '#6b7280' }}>{u.email} • {u.role}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Products Results */}
+                                {searchResults.products && searchResults.products.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: '8px 12px', background: '#f9fafb', fontSize: '.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Products</div>
+                                        {searchResults.products.map((p: any) => (
+                                            <div key={`p-${p.id}`} onClick={() => navTo(user?.role === 'seller' ? '/seller-dashboard/products' : '/dashboard/products')} style={{ padding: '10px 16px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }} className="hover-bg-gray">
+                                                <div style={{ width: 28, height: 28, borderRadius: 6, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    {p.primary_image?.url ? <img src={p.primary_image.url.startsWith('http') ? p.primary_image.url : `http://127.0.0.1:8000${p.primary_image.url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} /> : <Package size={14} color="#9ca3af" />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#1f2937' }}>{locale === 'ar' ? (p.name_ar || p.name_en) : p.name_en}</div>
+                                                    <div style={{ fontSize: '.75rem', color: '#6b7280' }}>{p.sku}</div>
+                                                </div>
+                                                <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#FF6B00' }}>${p.price}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Orders Results */}
+                                {searchResults.orders && searchResults.orders.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: '8px 12px', background: '#f9fafb', fontSize: '.75rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</div>
+                                        {searchResults.orders.map((o: any) => (
+                                            <div key={`o-${o.id}`} onClick={() => navTo(user?.role === 'seller' ? '/seller-dashboard/orders' : '/dashboard/orders')} style={{ padding: '10px 16px', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }} className="hover-bg-gray">
+                                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 700 }}>#{o.id}</div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#1f2937' }}>Customer: {o.customer?.name || 'Unknown'}</div>
+                                                    <div style={{ fontSize: '.75rem', color: '#6b7280', textTransform: 'capitalize' }}>Status: {o.status}</div>
+                                                </div>
+                                                <div style={{ fontSize: '.85rem', fontWeight: 700, color: '#10b981' }}>${o.total}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* No Results state */}
+                                {(!searchResults.users?.length && !searchResults.products?.length && !searchResults.orders?.length) && (
+                                    <div style={{ padding: 30, textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>
+                                        No results found for "{searchQuery}"
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Language Toggle */}
@@ -160,10 +287,83 @@ export default function Topbar({ title }: TopbarProps) {
                     </div>
                 )}
 
-                {/* Avatar */}
-                <div className="avatar" suppressHydrationWarning style={{ width: 36, height: 36, fontSize: '.85rem', background: '#ffedd5', color: '#FF6B00', cursor: 'pointer' }}>
-                    {user?.name?.[0]?.toUpperCase() ?? 'A'}
-                </div>
+                {/* Avatar + Profile Dropdown */}
+                {user && (
+                    <div style={{ position: 'relative' }} ref={profileRef}>
+                        <div
+                            className="avatar"
+                            suppressHydrationWarning
+                            onClick={() => setIsProfileOpen(!isProfileOpen)}
+                            style={{ width: 36, height: 36, fontSize: '.85rem', background: '#ffedd5', color: '#FF6B00', cursor: 'pointer', userSelect: 'none' }}
+                            title={user?.name}
+                        >
+                            {user?.name?.[0]?.toUpperCase() ?? 'A'}
+                        </div>
+
+                        {isProfileOpen && (
+                            <div className="card" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, width: 220, padding: 0, zIndex: 55, boxShadow: '0 10px 25px rgba(0,0,0,0.12)', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+                                {/* User info header */}
+                                <div style={{ padding: '14px 16px', borderBottom: '1px solid #f3f4f6', background: '#f9fafb' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#1f2937' }}>{user?.name}</div>
+                                    <div style={{ fontSize: '.75rem', color: '#9ca3af', marginTop: 2, textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ')}</div>
+                                </div>
+
+                                {/* Menu Items */}
+                                {[
+                                    {
+                                        icon: <User size={15} />,
+                                        label: 'Edit Profile',
+                                        onClick: () => {
+                                            setIsProfileOpen(false);
+                                            router.push(user?.role === 'seller' ? '/seller-dashboard/profile' : '/dashboard/profile');
+                                        }
+                                    },
+                                    {
+                                        icon: <KeyRound size={15} />,
+                                        label: 'Change Password',
+                                        onClick: () => {
+                                            setIsProfileOpen(false);
+                                            router.push(user?.role === 'seller' ? '/seller-dashboard/profile' : '/dashboard/profile');
+                                        }
+                                    },
+                                ].map(item => (
+                                    <button
+                                        key={item.label}
+                                        onClick={item.onClick}
+                                        style={{
+                                            width: '100%', background: 'none', border: 'none', padding: '12px 16px',
+                                            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                                            fontSize: '.85rem', color: '#374151', fontWeight: 500,
+                                            textAlign: 'left', transition: 'background 150ms',
+                                            borderBottom: '1px solid #f9fafb',
+                                        }}
+                                        onMouseOver={e => (e.currentTarget.style.background = '#f3f4f6')}
+                                        onMouseOut={e => (e.currentTarget.style.background = 'none')}
+                                    >
+                                        <span style={{ color: '#6b7280' }}>{item.icon}</span>
+                                        {item.label}
+                                    </button>
+                                ))}
+
+                                {/* Logout */}
+                                <button
+                                    onClick={() => { setIsProfileOpen(false); clearAuth(); router.push('/login'); }}
+                                    style={{
+                                        width: '100%', background: 'none', border: 'none', padding: '12px 16px',
+                                        display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+                                        fontSize: '.85rem', color: '#dc2626', fontWeight: 600,
+                                        textAlign: 'left', transition: 'background 150ms',
+                                    }}
+                                    onMouseOver={e => (e.currentTarget.style.background = '#fef2f2')}
+                                    onMouseOut={e => (e.currentTarget.style.background = 'none')}
+                                >
+                                    <LogOut size={15} />
+                                    Logout
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </header>
     );

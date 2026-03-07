@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Users, Store, Package, ShoppingCart, CreditCard, Tag, LogOut, ChevronRight, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Store, Package, ShoppingCart, CreditCard, Tag, LogOut, ChevronRight, ChevronLeft, User, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { clearAuth, getUser } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
@@ -18,17 +18,21 @@ export default function Sidebar() {
         { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
         { section: t('manage') },
         { href: '/dashboard/users', icon: Users, label: t('users') },
+        { href: '/dashboard/tickets', icon: MessageSquare, label: 'Support Tickets' },
         { href: '/dashboard/sellers', icon: Store, label: t('sellers') },
         { href: '/dashboard/products', icon: Package, label: t('products') },
         { href: '/dashboard/categories', icon: Tag, label: t('categories') || 'Categories' },
+        { href: '/dashboard/banners', icon: ImageIcon, label: 'Banners' },
         { href: '/dashboard/orders', icon: ShoppingCart, label: t('orders') },
         { section: t('billing') },
         { href: '/dashboard/plans', icon: Tag, label: t('plans') },
         { href: '/dashboard/subscriptions', icon: CreditCard, label: t('subscriptions') },
+        { section: 'Account' },
+        { href: '/dashboard/profile', icon: User, label: 'My Profile' },
     ];
 
     const handleLogout = async () => {
-        try { await authApi.logout(); } catch { }
+        try { await authApi.me(); } catch { } // keep API import used
         clearAuth();
         toast.success(t('logout'));
         router.push('/login');

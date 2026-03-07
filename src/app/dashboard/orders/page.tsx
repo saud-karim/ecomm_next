@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { ordersApi } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Order {
@@ -53,6 +53,24 @@ export default function OrdersPage() {
             if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: newStatus } : null);
             toast.success(`Order → ${newStatus}`);
         } catch { toast.error('Failed to update status'); }
+    };
+
+    const handleDownloadInvoice = async (id: number) => {
+        try {
+            const toastId = toast.loading('Downloading Invoice...');
+            const response = await ordersApi.downloadInvoice(id);
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `invoice-${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            toast.success('Invoice Downloaded', { id: toastId });
+        } catch (error) {
+            console.error('Invoice Download Failed:', error);
+            toast.error('Failed to download invoice');
+        }
     };
 
     return (
@@ -142,7 +160,16 @@ export default function OrdersPage() {
                     <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3 className="modal-title">{t('order')} #{selected.id}</h3>
-                            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem' }}>×</button>
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                <button
+                                    onClick={() => handleDownloadInvoice(selected.id)}
+                                    className="btn btn-secondary btn-sm"
+                                    title="Download Invoice"
+                                >
+                                    <Printer size={16} /> Receipt
+                                </button>
+                                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem' }}>×</button>
+                            </div>
                         </div>
                         {([[t('customer'), selected.customer?.name], [t('email'), selected.customer?.email], [t('sellers'), selected.seller?.store_name],
                         [t('total'), `$${selected.total}`], [t('discount'), selected.coupon_discount ? `$${selected.coupon_discount}` : '—'],

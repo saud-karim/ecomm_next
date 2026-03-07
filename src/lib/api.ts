@@ -36,8 +36,13 @@ api.interceptors.response.use(
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
-  logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+};
+
+// ─── Global Search ─────────────────────────────────
+export const globalApi = {
+  // `base` should be 'admin' or 'seller' depending on user role
+  search: (base: string, query: string) => api.get(`/${base}/search`, { params: { query } }),
 };
 
 // ─── Admin – Analytics ──────────────────────────────
@@ -79,6 +84,7 @@ export const ordersApi = {
   list: (params?: Record<string, unknown>) => api.get('/admin/orders', { params }),
   show: (id: number) => api.get(`/admin/orders/${id}`),
   updateStatus: (id: number, status: string) => api.put(`/admin/orders/${id}/status`, { status }),
+  downloadInvoice: (id: number) => api.get(`/admin/orders/${id}/invoice`, { responseType: 'blob' }),
 };
 
 // ─── Admin – Plans ───────────────────────────────────
@@ -107,6 +113,31 @@ export const categoriesApi = {
       headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined
     }),
   destroy: (id: number) => api.delete(`/admin/categories/${id}`),
+};
+
+// ─── Admin – Tickets ─────────────────────────────────
+export const adminTicketsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/admin/tickets', { params }),
+  show: (id: number) => api.get(`/admin/tickets/${id}`),
+  reply: (id: number, message: string) => api.post(`/admin/tickets/${id}/messages`, { message }),
+  updateStatus: (id: number, status: string) => api.put(`/admin/tickets/${id}/status`, { status }),
+};
+
+// ─── Admin – Banners ─────────────────────────────────
+export const bannersApi = {
+  list: () => api.get('/admin/banners'),
+  create: (data: FormData) => api.post('/admin/banners', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id: number, data: FormData) => api.post(`/admin/banners/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }), // POST used to handle multipart form data update
+  toggle: (id: number) => api.put(`/admin/banners/${id}/toggle`),
+  destroy: (id: number) => api.delete(`/admin/banners/${id}`),
+};
+
+
+// ─── Admin – Profile ─────────────────────────────────
+export const adminProfileApi = {
+  get: () => api.get('/admin/profile'),
+  update: (data: Record<string, unknown>) => api.put('/admin/profile', data),
+  changePassword: (data: Record<string, unknown>) => api.put('/admin/profile/password', data),
 };
 
 // ─── Seller – Profile ────────────────────────────────
@@ -141,6 +172,7 @@ export const sellerOrdersApi = {
   list: (params?: Record<string, unknown>) => api.get('/seller/orders', { params }),
   show: (id: number) => api.get(`/seller/orders/${id}`),
   updateStatus: (id: number, status: string) => api.put(`/seller/orders/${id}/status`, { status }),
+  downloadInvoice: (id: number) => api.get(`/seller/orders/${id}/invoice`, { responseType: 'blob' }),
 };
 
 // ─── Seller – Offers ─────────────────────────────────
@@ -158,6 +190,20 @@ export const sellerCouponsApi = {
   update: (id: number, data: Record<string, unknown>) => api.put(`/seller/coupons/${id}`, data),
   destroy: (id: number) => api.delete(`/seller/coupons/${id}`),
 };
+
+// ─── Seller – Reviews ────────────────────────────────
+export const sellerReviewsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/seller/reviews', { params }),
+};
+
+// ─── Seller – Tickets ────────────────────────────────
+export const sellerTicketsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/seller/tickets', { params }),
+  show: (id: number) => api.get(`/seller/tickets/${id}`),
+  create: (data: { subject: string; priority: string; message: string }) => api.post('/seller/tickets', data),
+  reply: (id: number, message: string) => api.post(`/seller/tickets/${id}/messages`, { message }),
+};
+
 
 // ─── Seller – Analytics ──────────────────────────────
 export const sellerAnalyticsApi = {

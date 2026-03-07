@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Tag, Ticket, User, BarChart3, LogOut, ChevronRight, ChevronLeft, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Tag, Ticket, User, BarChart3, LogOut, ChevronRight, ChevronLeft, CreditCard, Star, MessageSquare } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { clearAuth, getUser } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
@@ -22,6 +22,9 @@ export default function SellerSidebar() {
         { href: '/seller-dashboard/orders', icon: ShoppingCart, label: t('orders') },
         { href: '/seller-dashboard/offers', icon: Tag, label: t('sellerOffers') },
         { href: '/seller-dashboard/coupons', icon: Ticket, label: t('sellerCoupons') },
+        { href: '/seller-dashboard/reviews', icon: Star, label: 'Reviews' },
+        { section: 'Support' },
+        { href: '/seller-dashboard/tickets', icon: MessageSquare, label: 'Support Tickets' },
         { section: t('billing') },
         { href: '/seller-dashboard/subscription', icon: CreditCard, label: t('subscriptions') },
         { section: t('account') },
