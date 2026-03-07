@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 interface TopbarProps { title: string; }
 
 export default function Topbar({ title }: TopbarProps) {
-    const { locale, setLocale, t } = useI18n();
+    const { locale, setLocale, t, isRtl } = useI18n();
 
     const [user, setUser] = useState<any>(null);
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -106,6 +106,72 @@ export default function Topbar({ title }: TopbarProps) {
             fetchNotifications(user);
             setIsMenuOpen(false);
         } catch (e) { console.error(e); }
+    };
+    const getStatusLabel = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'pending': return t('statusPending');
+            case 'processing': return t('statusProcessing');
+            case 'shipped': return t('statusShipped');
+            case 'delivered': return t('statusDelivered');
+            case 'cancelled': return t('statusCancelled');
+            default: return status || '';
+        }
+    };
+
+    const formatMessage = (template: string, replacements: any) => {
+        let msg = template;
+        Object.keys(replacements).forEach(key => {
+            msg = msg.replace(`{${key}}`, replacements[key]);
+        });
+        return msg;
+    };
+
+    const getNotificationContent = (n: any) => {
+        const type = n.data.type;
+        let title = n.data.title;
+        let message = n.data.message;
+
+        switch (type) {
+            case 'new_order':
+                title = t('notifNewOrderTitle');
+                message = formatMessage(t('notifNewOrderMsg'), { id: n.data.order_id, amount: n.data.amount });
+                break;
+            case 'product_approved':
+                title = t('notifProductApprovedTitle');
+                message = formatMessage(t('notifProductApprovedMsg'), { name: isRtl ? (n.data.product_name_ar || n.data.product_name) : (n.data.product_name || n.data.product_name_ar) });
+                break;
+            case 'product_rejected':
+                title = t('notifProductRejectedTitle');
+                message = formatMessage(t('notifProductRejectedMsg'), {
+                    name: isRtl ? (n.data.product_name_ar || n.data.product_name) : (n.data.product_name || n.data.product_name_ar),
+                    reason: n.data.reason
+                });
+                break;
+            case 'new_product_submitted':
+                title = t('notifNewProductSubmittedTitle');
+                message = formatMessage(t('notifNewProductSubmittedMsg'), {
+                    name: isRtl ? (n.data.product_name_ar || n.data.product_name) : (n.data.product_name || n.data.product_name_ar)
+                });
+                break;
+            case 'order_status_updated':
+                title = t('notifOrderStatusUpdatedTitle');
+                message = formatMessage(t('notifOrderStatusUpdatedMsg'), { id: n.data.order_id, status: getStatusLabel(n.data.status) });
+                break;
+            case 'order_status_changed':
+                title = t('notifOrderStatusChangedTitle');
+                if (n.data.changed_by === 'seller') {
+                    message = formatMessage(t('notifOrderStatusChangedBySellerMsg'), {
+                        store: isRtl ? (n.data.store_name_ar || n.data.store_name) : (n.data.store_name || n.data.store_name_ar) || 'Seller',
+                        id: n.data.order_id,
+                        status: getStatusLabel(n.data.status)
+                    });
+                } else {
+                    message = formatMessage(t('notifOrderStatusChangedByAdminMsg'), { id: n.data.order_id, status: getStatusLabel(n.data.status) });
+                }
+                break;
+        }
+
+        return { title, message };
     };
 
     const handleSearch = (query: string) => {
@@ -253,11 +319,11 @@ export default function Topbar({ title }: TopbarProps) {
                         </button>
 
                         {isMenuOpen && (
-                            <div className="card" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: -10, width: 320, padding: 0, zIndex: 50, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                            <div className="card" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: isRtl ? 'auto' : -10, left: isRtl ? -10 : 'auto', width: 320, padding: 0, zIndex: 50, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                                 <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9fafb' }}>
-                                    <h4 style={{ margin: 0, fontSize: '.95rem', fontWeight: 800, color: '#1f2937' }}>Notifications</h4>
+                                    <h4 style={{ margin: 0, fontSize: '.95rem', fontWeight: 800, color: '#1f2937' }}>{t('notifications')}</h4>
                                     {unreadCount > 0 && (
-                                        <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: '#FF6B00', fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>Mark all read</button>
+                                        <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: '#FF6B00', fontSize: '.75rem', fontWeight: 600, cursor: 'pointer' }}>{t('markAllRead')}</button>
                                     )}
                                 </div>
                                 <div style={{ maxHeight: 360, overflowY: 'auto' }}>
@@ -272,14 +338,19 @@ export default function Topbar({ title }: TopbarProps) {
                                             <div style={{ width: 36, height: 36, borderRadius: '50%', background: n.read_at ? '#f3f4f6' : '#FF6B0018', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 {n.data.type === 'new_order' ? <Package size={16} color={n.read_at ? '#9ca3af' : '#FF6B00'} /> : <CheckCircle size={16} color={n.read_at ? '#9ca3af' : '#FF6B00'} />}
                                             </div>
-                                            <div>
-                                                <div style={{ fontSize: '.85rem', fontWeight: n.read_at ? 600 : 700, color: '#1f2937', marginBottom: 2 }}>{n.data.title}</div>
-                                                <div style={{ fontSize: '.8rem', color: '#6b7280', lineHeight: 1.4 }}>{n.data.message}</div>
-                                                <div style={{ fontSize: '.7rem', color: '#9ca3af', marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
-                                            </div>
+                                            {(() => {
+                                                const { title, message } = getNotificationContent(n);
+                                                return (
+                                                    <div>
+                                                        <div style={{ fontSize: '.85rem', fontWeight: n.read_at ? 600 : 700, color: '#1f2937', marginBottom: 2 }}>{title}</div>
+                                                        <div style={{ fontSize: '.8rem', color: '#6b7280', lineHeight: 1.4 }}>{message}</div>
+                                                        <div style={{ fontSize: '.7rem', color: '#9ca3af', marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     )) : (
-                                        <div style={{ padding: 30, textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>No notifications yet</div>
+                                        <div style={{ padding: 30, textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>{t('noNotificationsYet')}</div>
                                     )}
                                 </div>
                             </div>

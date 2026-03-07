@@ -20,7 +20,7 @@ interface DashData {
 export default function SellerDashboardPage() {
     const [data, setData] = useState<DashData | null>(null);
     const [loading, setLoading] = useState(true);
-    const { t, locale } = useI18n();
+    const { t, locale, isRtl } = useI18n();
 
     const fetchDash = useCallback(() => {
         sellerAnalyticsApi.dashboard()
@@ -78,8 +78,8 @@ export default function SellerDashboardPage() {
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={data.daily_revenue}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                                <YAxis tick={{ fontSize: 11 }} />
+                                <XAxis dataKey="date" tick={{ fontSize: 11 }} reversed={isRtl} />
+                                <YAxis tick={{ fontSize: 11 }} orientation={isRtl ? 'right' : 'left'} />
                                 <Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
                                 <Bar dataKey="revenue" fill="#FF6B00" radius={[4, 4, 0, 0]} maxBarSize={40} />
                             </BarChart>

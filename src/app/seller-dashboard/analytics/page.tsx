@@ -17,7 +17,7 @@ export default function SellerAnalyticsPage() {
         return d.toISOString().slice(0, 10);
     });
     const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
-    const { t } = useI18n();
+    const { t, isRtl } = useI18n();
 
     const fetchData = async () => {
         setLoading(true);
@@ -78,8 +78,8 @@ export default function SellerAnalyticsPage() {
                             <ResponsiveContainer width="100%" height={220}>
                                 <BarChart data={daily}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                                    <YAxis tick={{ fontSize: 10 }} />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} reversed={isRtl} />
+                                    <YAxis tick={{ fontSize: 10 }} orientation={isRtl ? 'right' : 'left'} />
                                     <Tooltip formatter={(v) => [`$${v}`, t('totalRevenue2')]} />
                                     <Bar dataKey="revenue" fill="#FF6B00" radius={[4, 4, 0, 0]} />
                                 </BarChart>
@@ -94,8 +94,8 @@ export default function SellerAnalyticsPage() {
                             <ResponsiveContainer width="100%" height={180}>
                                 <LineChart data={daily}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                                    <YAxis tick={{ fontSize: 10 }} />
+                                    <XAxis dataKey="date" tick={{ fontSize: 10 }} reversed={isRtl} />
+                                    <YAxis tick={{ fontSize: 10 }} orientation={isRtl ? 'right' : 'left'} />
                                     <Tooltip />
                                     <Line type="monotone" dataKey="orders" stroke="#3b82f6" strokeWidth={2} dot={false} />
                                 </LineChart>

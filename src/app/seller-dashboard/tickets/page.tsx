@@ -4,6 +4,8 @@ import { sellerTicketsApi } from '@/lib/api';
 import { MessageSquare, AlertCircle, Clock, CheckCircle, Send, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { useI18n } from '@/lib/i18n';
+
 interface Ticket {
     id: number;
     subject: string;
@@ -24,6 +26,7 @@ interface TicketMessage {
 }
 
 export default function SellerTicketsPage() {
+    const { t } = useI18n();
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -135,15 +138,15 @@ export default function SellerTicketsPage() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
                 <div>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Support Tickets</h1>
-                    <p style={{ color: '#6b7280', margin: 0, fontSize: '.9rem' }}>Contact administration for help and inquiries.</p>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>{t('supportTickets')}</h1>
+                    <p style={{ color: '#6b7280', margin: 0, fontSize: '.9rem' }}>{t('ticketContactAdmin')}</p>
                 </div>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="btn btn-primary"
                     style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                 >
-                    <Plus size={16} /> Open New Ticket
+                    <Plus size={16} /> {t('openNewTicket')}
                 </button>
             </div>
 
@@ -152,10 +155,10 @@ export default function SellerTicketsPage() {
                 <table className="tbl">
                     <thead>
                         <tr>
-                            <th>Subject & ID</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Last Update</th>
+                            <th>{t('subjectId')}</th>
+                            <th>{t('priority')}</th>
+                            <th>{t('status')}</th>
+                            <th>{t('lastUpdate')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,7 +168,7 @@ export default function SellerTicketsPage() {
                             <tr>
                                 <td colSpan={4} style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
                                     <MessageSquare size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-                                    You don't have any support tickets.
+                                    {t('noTicketsFound')}
                                 </td>
                             </tr>
                         ) : (
@@ -185,12 +188,12 @@ export default function SellerTicketsPage() {
                                         </td>
                                         <td>
                                             <span style={{ fontSize: '.75rem', fontWeight: 700, textTransform: 'uppercase', color: ticket.priority === 'high' ? '#ef4444' : ticket.priority === 'medium' ? '#f59e0b' : '#3b82f6' }}>
-                                                {ticket.priority}
+                                                {ticket.priority === 'low' ? t('priorityLow').split('-')[0].trim() : ticket.priority === 'medium' ? t('priorityMedium').split('-')[0].trim() : t('priorityHigh').split('-')[0].trim()}
                                             </span>
                                         </td>
                                         <td>
                                             <span className="badge" style={{ background: statusUI.bg, color: statusUI.text, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                                <StatusIcon size={12} /> {ticket.status === 'open' ? 'Open' : ticket.status === 'pending' ? 'Wait Admin Reply' : 'Closed'}
+                                                <StatusIcon size={12} /> {ticket.status === 'open' ? t('open') : ticket.status === 'pending' ? t('pendingWait') : t('closed')}
                                             </span>
                                         </td>
                                         <td style={{ fontSize: '.85rem', color: '#6b7280' }}>
@@ -224,12 +227,12 @@ export default function SellerTicketsPage() {
                                     <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: '#111827' }}>{selectedTicket.subject || 'Loading...'}</h2>
                                     {selectedTicket.status && (
                                         <span className="badge" style={{ background: getStatusColor(selectedTicket.status).bg, color: getStatusColor(selectedTicket.status).text }}>
-                                            {selectedTicket.status}
+                                            {selectedTicket.status === 'open' ? t('open') : selectedTicket.status === 'pending' ? t('pendingWait') : t('closed')}
                                         </span>
                                     )}
                                 </div>
                                 <div style={{ fontSize: '.85rem', color: '#6b7280' }}>
-                                    Ticket ID: #{selectedTicket.id}
+                                    {t('id')}: #{selectedTicket.id}
                                 </div>
                             </div>
                             <button onClick={() => setSelectedTicket(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6b7280' }}>×</button>
@@ -247,7 +250,7 @@ export default function SellerTicketsPage() {
                                                 fontSize: '.75rem', color: '#9ca3af', marginBottom: 4, padding: '0 4px',
                                                 display: 'flex', gap: 8, flexDirection: isMe ? 'row-reverse' : 'row'
                                             }}>
-                                                <span style={{ fontWeight: 600, color: '#4b5563' }}>{isMe ? 'You' : msg.user.name}</span>
+                                                <span style={{ fontWeight: 600, color: '#4b5563' }}>{isMe ? t('seller') || 'You' : t('admin')}</span>
                                                 <span>{formatDate(msg.created_at)}</span>
                                             </div>
                                             <div style={{
@@ -268,28 +271,35 @@ export default function SellerTicketsPage() {
                             )}
                         </div>
 
-                        <div style={{ padding: 20, borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                            <div style={{ display: 'flex', gap: 12 }}>
-                                <textarea
-                                    value={replyText}
-                                    onChange={e => setReplyText(e.target.value)}
-                                    placeholder="Type your reply..."
-                                    style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: 8, padding: '12px 16px', resize: 'none', height: 60, fontFamily: 'inherit', fontSize: '.9rem' }}
-                                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(); } }}
-                                ></textarea>
-                                <button
-                                    onClick={handleReply}
-                                    disabled={replying || !replyText.trim()}
-                                    style={{
-                                        background: '#FF6B00', color: '#fff', border: 'none', borderRadius: 8,
-                                        padding: '0 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                                        fontWeight: 600, opacity: (!replyText.trim() || replying) ? 0.6 : 1
-                                    }}
-                                >
-                                    {replying ? <span className="spinner"></span> : <><Send size={18} /> Send</>}
-                                </button>
+                        {selectedTicket.status !== 'closed' ? (
+                            <div style={{ padding: 20, borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
+                                <div style={{ display: 'flex', gap: 12 }}>
+                                    <textarea
+                                        value={replyText}
+                                        onChange={e => setReplyText(e.target.value)}
+                                        placeholder={t('replyPlaceholder')}
+                                        style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: 8, padding: '12px 16px', resize: 'none', height: 60, fontFamily: 'inherit', fontSize: '.9rem' }}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply(); } }}
+                                    ></textarea>
+                                    <button
+                                        onClick={handleReply}
+                                        disabled={replying || !replyText.trim()}
+                                        style={{
+                                            background: '#FF6B00', color: '#fff', border: 'none', borderRadius: 8,
+                                            padding: '0 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                                            fontWeight: 600, opacity: (!replyText.trim() || replying) ? 0.6 : 1
+                                        }}
+                                    >
+                                        {replying ? <span className="spinner"></span> : <><Send size={18} /> {t('sendReply')}</>}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div style={{ padding: 16, background: '#f9fafb', borderTop: '1px solid #e5e7eb', textAlign: 'center', color: '#6b7280', fontSize: '.9rem' }}>
+                                <AlertCircle size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />
+                                {t('ticketClosedMsg')}
+                            </div>
+                        )}
 
                     </div>
                 </div>
@@ -300,50 +310,50 @@ export default function SellerTicketsPage() {
                 <div className="modal-backdrop" onClick={() => setIsCreateModalOpen(false)}>
                     <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Open Support Ticket</h2>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{t('openNewTicket')}</h2>
                             <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>×</button>
                         </div>
                         <div className="modal-body" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
 
                             <div className="form-group">
-                                <label className="form-label">Subject *</label>
+                                <label className="form-label">{t('subjectLabel')}</label>
                                 <input
                                     className="form-input"
                                     value={createForm.subject}
                                     onChange={e => setCreateForm(f => ({ ...f, subject: e.target.value }))}
-                                    placeholder="Briefly describe the issue..."
+                                    placeholder="..."
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">Priority</label>
+                                <label className="form-label">{t('priorityLabel')}</label>
                                 <select
                                     className="form-input"
                                     value={createForm.priority}
                                     onChange={e => setCreateForm(f => ({ ...f, priority: e.target.value }))}
                                 >
-                                    <option value="low">Low - General Question</option>
-                                    <option value="medium">Medium - Having an issue</option>
-                                    <option value="high">High - Urgent problem</option>
+                                    <option value="low">{t('priorityLow')}</option>
+                                    <option value="medium">{t('priorityMedium')}</option>
+                                    <option value="high">{t('priorityHigh')}</option>
                                 </select>
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">Message *</label>
+                                <label className="form-label">{t('messageLabel')}</label>
                                 <textarea
                                     className="form-input"
                                     value={createForm.message}
                                     onChange={e => setCreateForm(f => ({ ...f, message: e.target.value }))}
-                                    placeholder="Provide detailed information about your inquiry or issue..."
+                                    placeholder="..."
                                     style={{ height: 120, resize: 'vertical' }}
                                 />
                             </div>
 
                         </div>
                         <div className="modal-footer" style={{ padding: '16px 20px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'flex-end', gap: 12, background: '#f9fafb' }}>
-                            <button className="btn" onClick={() => setIsCreateModalOpen(false)} style={{ background: '#fff', border: '1px solid #d1d5db' }}>Cancel</button>
+                            <button className="btn" onClick={() => setIsCreateModalOpen(false)} style={{ background: '#fff', border: '1px solid #d1d5db' }}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
-                                {creating ? <span className="spinner"></span> : 'Submit Ticket'}
+                                {creating ? <span className="spinner"></span> : t('submitTicket')}
                             </button>
                         </div>
                     </div>

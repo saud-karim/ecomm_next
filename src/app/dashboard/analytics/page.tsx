@@ -110,7 +110,7 @@ export default function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={260}>
                                     <BarChart data={topSellersArr} layout="vertical">
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-                                        <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                                        <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} reversed={isRtl} />
                                         <YAxis dataKey="seller_name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={100} orientation={isRtl ? 'right' : 'left'} />
                                         <Tooltip formatter={(v) => [`$${v}`, t('totalRevenue')]} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
                                         <Bar dataKey="orders_sum_total" fill="#FF6B00" radius={[0, 6, 6, 0]} />

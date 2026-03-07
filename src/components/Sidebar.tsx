@@ -18,17 +18,17 @@ export default function Sidebar() {
         { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
         { section: t('manage') },
         { href: '/dashboard/users', icon: Users, label: t('users') },
-        { href: '/dashboard/tickets', icon: MessageSquare, label: 'Support Tickets' },
+        { href: '/dashboard/tickets', icon: MessageSquare, label: t('supportTickets') },
         { href: '/dashboard/sellers', icon: Store, label: t('sellers') },
         { href: '/dashboard/products', icon: Package, label: t('products') },
         { href: '/dashboard/categories', icon: Tag, label: t('categories') || 'Categories' },
-        { href: '/dashboard/banners', icon: ImageIcon, label: 'Banners' },
+        { href: '/dashboard/banners', icon: ImageIcon, label: t('homepageBanners') },
         { href: '/dashboard/orders', icon: ShoppingCart, label: t('orders') },
         { section: t('billing') },
         { href: '/dashboard/plans', icon: Tag, label: t('plans') },
         { href: '/dashboard/subscriptions', icon: CreditCard, label: t('subscriptions') },
-        { section: 'Account' },
-        { href: '/dashboard/profile', icon: User, label: 'My Profile' },
+        { section: t('account') },
+        { href: '/dashboard/profile', icon: User, label: t('profileTitle') },
     ];
 
     const handleLogout = async () => {

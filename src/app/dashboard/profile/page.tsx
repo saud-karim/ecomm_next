@@ -28,7 +28,7 @@ export default function AdminProfilePage() {
                 setProfile(p);
                 setForm({ name: p.name, phone: p.phone || '' });
             })
-            .catch(() => toast.error('Failed to load profile'))
+            .catch(() => toast.error(t('failedLoadProfile') || 'Failed to load profile'))
             .finally(() => setLoading(false));
     }, []);
 
@@ -38,13 +38,13 @@ export default function AdminProfilePage() {
             await adminProfileApi.update(form);
             toast.success(t('profileUpdated'));
             setProfile(prev => prev ? { ...prev, name: form.name, phone: form.phone } : null);
-        } catch { toast.error('Failed to save'); }
+        } catch { toast.error(t('failedToSave') || 'Failed to save'); }
         finally { setSaving(false); }
     };
 
     const savePassword = async () => {
         if (pwForm.password !== pwForm.password_confirmation) {
-            toast.error('Passwords do not match');
+            toast.error(t('passwordsMatchError') || 'Passwords do not match');
             return;
         }
         setSavingPw(true);
@@ -63,7 +63,7 @@ export default function AdminProfilePage() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 700 }}>
             <div>
-                <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{t('profile') || 'My Profile'}</h2>
+                <h2 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{t('profileTitle') || 'My Profile'}</h2>
                 <p style={{ color: '#6b7280', fontSize: '.875rem' }}>{profile?.email} &bull; <span style={{ textTransform: 'capitalize' }}>{profile?.role?.replace('_', ' ')}</span></p>
             </div>
 
@@ -113,12 +113,12 @@ export default function AdminProfilePage() {
 
             {/* Change Password */}
             <div className="card">
-                <h3 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 20 }}>{t('newPassword') || 'Change Password'}</h3>
+                <h3 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 20 }}>{t('changePassword') || 'Change Password'}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     {([
                         { key: 'current_password', label: t('currentPassword') || 'Current Password' },
                         { key: 'password', label: t('newPassword') || 'New Password' },
-                        { key: 'password_confirmation', label: `${t('newPassword') || 'New Password'} (Confirm)` },
+                        { key: 'password_confirmation', label: t('confirmNewPassword') || 'Confirm New Password' },
                     ] as const).map(({ key, label }) => (
                         <div className="form-group" key={key}>
                             <label className="form-label">{label}</label>

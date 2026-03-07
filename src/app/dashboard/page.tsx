@@ -154,7 +154,7 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={data.top_sellers.map(s => ({ ...s, store_name: isRtl ? (s.store_name_ar || s.store_name_en) : s.store_name_en }))} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-                            <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                            <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} reversed={isRtl} />
                             <YAxis type="category" dataKey="store_name" tick={{ fontSize: 12, fill: '#374151' }} tickLine={false} axisLine={false} width={120} orientation={isRtl ? 'right' : 'left'} />
                             <Tooltip formatter={(v) => [`$${v}`, t('totalRevenue')]} contentStyle={{ borderRadius: 10, fontSize: 13 }} />
                             <Bar dataKey="revenue" fill="#FF6B00" radius={[0, 6, 6, 0]} />
