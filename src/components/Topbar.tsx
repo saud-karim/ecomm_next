@@ -101,6 +101,11 @@ export default function Topbar({ title }: TopbarProps) {
             if (url.startsWith('/seller/tickets/')) {
                 url = url.replace('/seller/tickets/', '/seller-dashboard/tickets/');
             }
+
+            // Force ticket URLs to go to the list page, not a specific ID
+            // Match /dashboard/tickets/123 or /seller-dashboard/tickets/123 and strip the ID
+            url = url.replace(/(\/tickets)\/\d+$/, '$1');
+
             return url;
         }
         if (!user) return '#';
