@@ -23,7 +23,9 @@ export default function UsersPage() {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await usersApi.list({ search, role, page, per_page: 15 });
+            const params: Record<string, unknown> = { search, page, per_page: 15 };
+            if (role) params.role = role;
+            const res = await usersApi.list(params);
             setUsers(res.data.data.data || res.data.data);
             setMeta(res.data.data.meta || { current_page: res.data.data.current_page, last_page: res.data.data.last_page, total: res.data.data.total });
         } catch { toast.error('Failed to load users'); }

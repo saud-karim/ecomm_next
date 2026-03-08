@@ -39,7 +39,9 @@ export default function Topbar({ title }: TopbarProps) {
             const res = await notificationsApi.list(apiPrefix);
             setNotifications(res.data.data.notifications.data || []);
             setUnreadCount(res.data.data.unread_count || 0);
-        } catch (e) { console.error('Failed to load notifications'); }
+        } catch (e) {
+            console.warn('Failed to load notifications');
+        }
     };
 
     useEffect(() => {
@@ -87,6 +89,20 @@ export default function Topbar({ title }: TopbarProps) {
     };
 
     const getNotificationLink = (n: any) => {
+        // If the notification carries an explicit url, normalize and use it
+        if (n.data?.url) {
+            let url: string = n.data.url;
+            // Fix legacy/incorrect paths that don't have the correct dashboard prefix
+            if (url.startsWith('/tickets/')) {
+                url = user?.role === 'seller'
+                    ? url.replace('/tickets/', '/seller-dashboard/tickets/')
+                    : url.replace('/tickets/', '/dashboard/tickets/');
+            }
+            if (url.startsWith('/seller/tickets/')) {
+                url = url.replace('/seller/tickets/', '/seller-dashboard/tickets/');
+            }
+            return url;
+        }
         if (!user) return '#';
         if (user.role === 'super_admin') {
             if (n.data.type === 'new_product_submitted') return '/dashboard/products';
